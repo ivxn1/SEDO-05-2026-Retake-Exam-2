@@ -1,45 +1,41 @@
 pipeline {
     agent any
 
-    branches {
-        only 'main'
-    }
-
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
+        stage('Restore') {
+            when {
+                branch 'main'
             }
-        }
-
-        stage('Restore Dependencies') {
             steps {
-                echo 'Restoring NuGet packages...'
-                sh "dotnet restore "
+                sh 'dotnet restore'
             }
         }
 
         stage('Build') {
+            when {
+                branch 'main'
+            }
             steps {
-                echo 'Building .NET solution'
-                sh "dotnet build --no-restore"
+                sh 'dotnet build --no-restore'
             }
         }
 
         stage('Test') {
+            when {
+                branch 'main'
+            }
             steps {
-                echo 'Executing test projects...'
-                sh "dotnet test"
+                sh 'dotnet test --no-build'
             }
         }
     }
 
-    post {
-        success {
-            echo 'all tests passed successfully!'
+        post {
+            success {
+                echo 'all tests passed successfully!'
+            }
+            failure {
+                echo 'Check logs for build or test errors.'
+            }
         }
-        failure {
-            echo 'Check logs for build or test errors.'
-        }
-    }
 }
